@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Установка пароля — система тестирования</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="config.js" defer></script>
+  <script src="supabase-client.js" defer></script>
+  <script src="accept-invite.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand__eyebrow">Стандарты контента</span>
+        <strong class="brand__title">Проверка знаний</strong>
+        <span class="brand__subtitle">Учебный интерфейс для сотрудников</span>
+      </div>
+      <div class="sidebar-note"><span class="status-dot"></span>Приглашение через Supabase Auth</div>
+      <a class="encyclopedia-link" href="https://anasteishak666-a11y.github.io/Encyclopedia/">← Открыть энциклопедию</a>
+    </aside>
+    <main class="main-content">
+      <div class="topbar">
+        <span class="eyebrow">Система тестирования</span>
+        <span class="topbar-pill">Первый вход</span>
+      </div>
+      <div class="login-layout">
+        <div class="intro-panel">
+          <span class="hero-badge">Приглашение сотрудника</span>
+          <h1>Создайте пароль для входа</h1>
+          <p>После установки пароля вы сможете войти в систему тестирования по своему email.</p>
+        </div>
+        <div class="card login-card">
+          <span class="section-label">Подтверждение приглашения</span>
+          <h2>Установка пароля</h2>
+          <p class="auth-message" id="invite-message" role="status" aria-live="polite">Проверяем ссылку приглашения…</p>
+          <form id="invite-password-form" hidden>
+            <label for="new-password">Новый пароль</label>
+            <input id="new-password" name="new-password" type="password" autocomplete="new-password" minlength="12" required>
+            <label for="repeat-password">Повторите пароль</label>
+            <input id="repeat-password" name="repeat-password" type="password" autocomplete="new-password" minlength="12" required>
+            <p class="muted">Не менее 12 символов.</p>
+            <button class="button button--primary button--full" id="save-password" type="submit">Сохранить пароль</button>
+          </form>
+          <button class="button button--primary button--full" id="go-to-login" type="button" hidden>Перейти ко входу</button>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

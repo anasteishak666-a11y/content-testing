@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Тестирование сотрудников</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="config.js" defer></script>
+  <script src="supabase-client.js" defer></script>
+  <script src="app.js" defer></script>
+  <script src="admin.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand__eyebrow">Стандарты контента</span>
+        <strong class="brand__title">Проверка знаний</strong>
+        <span class="brand__subtitle">Учебный интерфейс для сотрудников</span>
+      </div>
+      <nav class="side-nav" aria-label="Навигация по демоверсии">
+        <button type="button" class="nav-button is-active" data-go="login">Вход</button>
+        <button type="button" class="nav-button" data-go="dashboard" data-auth-only hidden>Личный кабинет</button>
+        <button type="button" class="nav-button" data-go="quiz" data-auth-only data-demo-only hidden>Тестирование</button>
+        <button type="button" class="nav-button" data-go="admin" hidden>Администратор</button>
+        <button type="button" class="nav-button" id="logout-button" hidden>Выйти</button>
+      </nav>
+      <div class="sidebar-note">
+        <span class="status-dot"></span>
+        Вход через Supabase Auth<br>Базовый тест подключён
+      </div>
+      <a class="encyclopedia-link" href="https://anasteishak666-a11y.github.io/Encyclopedia/">← Открыть энциклопедию</a>
+    </aside>
+
+    <main class="main-content">
+      <div class="topbar">
+        <span class="eyebrow">Система тестирования</span>
+        <span class="topbar-pill" id="data-status-label">Проверяем доступ</span>
+      </div>
+      <div class="demo-banner" role="note">
+        <strong>Данные тестирования.</strong> Доступные сведения и действия загружаются через сервер с проверкой прав.
+      </div>
+
+      <section class="screen" id="screen-login" aria-labelledby="login-title">
+        <div class="login-layout">
+          <div class="intro-panel">
+            <span class="hero-badge">Новый раздел энциклопедии</span>
+            <h1 id="login-title">Проверяйте знания уверенно</h1>
+            <p>Базовый тест, полная аттестация и история результатов — в одном спокойном рабочем пространстве.</p>
+            <div class="intro-stat"><strong>9 тем</strong><span>от выбора вещей до анонса нового завоза</span></div>
+          </div>
+          <div class="card login-card">
+            <span class="section-label">Вход сотрудника</span>
+            <h2>Добро пожаловать</h2>
+            <p class="muted">Войдите по email и паролю приглашённого сотрудника.</p>
+            <p class="auth-message" id="auth-message" role="status" aria-live="polite">Проверяем подключение к авторизации…</p>
+            <form id="login-form">
+              <label for="email">Электронная почта</label>
+              <input id="email" name="email" type="email" autocomplete="email" placeholder="имя@example.ru" required>
+              <label for="password">Пароль</label>
+              <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Введите пароль" required>
+              <button class="button button--primary button--full" id="login-button" type="submit" disabled>Войти в кабинет</button>
+            </form>
+            <a class="text-button" id="forgot-password" href="#reset-password">Забыли пароль?</a>
+            <form id="reset-request-form" hidden>
+              <label for="reset-email">Электронная почта</label>
+              <input id="reset-email" name="reset-email" type="email" autocomplete="email" required>
+              <button class="button button--primary button--full" id="send-reset" type="submit">Отправить письмо восстановления</button>
+              <button class="text-button" id="back-to-login" type="button">Вернуться ко входу</button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen" id="screen-dashboard" aria-labelledby="dashboard-title" hidden>
+        <div class="page-heading">
+          <div><span class="section-label">Личный кабинет</span><h1 id="dashboard-title">Здравствуйте</h1><p id="account-email">Проверяем доступность базового теста.</p></div>
+          <span class="avatar" aria-hidden="true">С</span>
+        </div>
+        <div class="metrics" data-demo-only>
+          <div class="metric card"><span>Текущий уровень</span><strong>Хорошее знание</strong><small>по последней аттестации</small></div>
+          <div class="metric card"><span>Последний результат</span><strong>86%</strong><small>полная аттестация · 12 октября</small></div>
+          <div class="metric card"><span>Лучший результат</span><strong>92%</strong><small>полная аттестация · 12 июля</small></div>
+        </div>
+        <div class="section-heading"><div><span class="section-label">Следующий шаг</span><h2>Доступные тесты</h2></div></div>
+        <div class="test-grid" data-employee-only hidden>
+          <article class="card test-card">
+            <span class="chip chip--muted" id="basic-availability-chip">Проверяем</span>
+            <h3>Базовый тест</h3>
+            <p>20 вопросов · 25 минут · порог 80%</p>
+            <div class="test-card__footer"><span id="basic-availability-message" role="status" aria-live="polite">Проверяем доступность теста…</span><button class="button button--primary" id="basic-availability-action" type="button" disabled hidden>Начать тест</button></div>
+            <p class="muted" id="basic-launch-note" hidden>Запущенная попытка не остановится при закрытии страницы. Подтверждённый ответ нельзя изменить; неудачная попытка может потребовать ожидания 24 часа перед пересдачей.</p>
+          </article>
+          <article class="card test-card test-card--featured">
+            <span class="chip chip--muted" id="full-availability-chip">Проверяем</span>
+            <h3>Полная аттестация</h3>
+            <p>50 вопросов · 75 минут · порог 45 из 50</p>
+            <div class="test-card__footer"><span id="full-availability-message" role="status" aria-live="polite">Проверяем доступность аттестации…</span><button class="button button--primary" id="full-availability-action" type="button" disabled hidden>Начать аттестацию</button></div>
+            <p class="muted" id="full-launch-note" hidden>Таймер не останавливается при закрытии страницы. Подтверждённый ответ изменить нельзя.</p>
+          </article>
+        </div>
+        <section class="card basic-history" id="basic-history-panel" data-employee-only hidden aria-labelledby="basic-history-title">
+          <div class="basic-history__heading"><h2 id="basic-history-title">История тестирования</h2><button class="text-button" type="button" id="basic-history-retry" hidden>Обновить</button></div>
+          <p id="basic-history-status" class="muted" role="status">Загружаем историю…</p>
+          <div id="basic-history-list" class="basic-history__list"></div>
+          <button class="text-button" type="button" id="basic-history-more" hidden>Показать более ранние попытки</button>
+        </section>
+        <div class="test-grid" data-demo-only>
+          <article class="card test-card">
+            <span class="chip chip--success">Пройден</span>
+            <h3>Базовый тест</h3>
+            <p>20 вопросов · 25 минут · порог 80%</p>
+            <div class="test-card__footer"><span>Повторное прохождение закрыто</span><button class="text-button" type="button" data-result="basic">Посмотреть результат →</button></div>
+          </article>
+          <article class="card test-card test-card--featured">
+            <span class="chip chip--warning">Пересдача ожидается</span>
+            <h3>Полная аттестация</h3>
+            <p>50 вопросов · 75 минут · порог 90%</p>
+            <div class="test-card__footer"><span>Доступна с 19 октября 2026</span><button class="button button--primary" type="button" data-start="full">Посмотреть демотест</button></div>
+          </article>
+        </div>
+        <div class="info-strip" data-demo-only><strong>Переаттестация</strong><span>Следующая дата после успешного прохождения будет рассчитана через 3 календарных месяца.</span></div>
+        <div class="section-heading" data-demo-only><div><span class="section-label">Все попытки</span><h2>История результатов</h2></div></div>
+        <div class="card table-card" data-demo-only>
+          <div class="table-scroll"><table><thead><tr><th>Дата</th><th>Тест</th><th>Результат</th><th>Уровень</th><th>Статус</th></tr></thead><tbody>
+            <tr><td>12.10.2026</td><td>Полная аттестация</td><td><strong>86%</strong></td><td>Хорошее знание</td><td><span class="chip chip--warning">Пересдача</span></td></tr>
+            <tr><td>12.07.2026</td><td>Полная аттестация</td><td><strong>92%</strong></td><td>Отличное знание</td><td><span class="chip chip--success">Пройдена</span></td></tr>
+            <tr><td>05.07.2026</td><td>Базовый тест</td><td><strong>85%</strong></td><td>Хорошее знание</td><td><span class="chip chip--success">Пройден</span></td></tr>
+          </tbody></table></div>
+        </div>
+        <div class="card result-card" id="result-panel" hidden>
+          <div class="result-card__heading"><div><span class="section-label">Пример итогового экрана</span><h2 id="result-title">Результат аттестации</h2><p id="result-description">Это вымышленный результат. Выборы в демотесте на него не влияют.</p></div><strong class="result-score" id="result-score">86%</strong></div>
+          <div id="result-detail"></div>
+          <button class="button button--ghost" type="button" id="close-result">Скрыть результат</button>
+        </div>
+      </section>
+
+      <section class="screen" id="screen-basic-attempt" aria-labelledby="basic-attempt-title" hidden>
+        <div class="page-heading"><div><span class="section-label">Тестирование</span><h1 id="basic-attempt-title">Базовый тест</h1><p>После подтверждения ответа изменить его нельзя.</p></div></div>
+        <div class="quiz-layout">
+          <div class="card question-card">
+            <div class="question-top"><span id="basic-question-number">Вопрос</span><span id="basic-question-deadline" class="timer">Срок уточняется</span></div>
+            <div class="progress" aria-hidden="true"><span id="basic-question-progress"></span></div>
+            <span id="basic-question-topic" class="section-label"></span>
+            <h2 id="basic-question-title"></h2>
+            <div id="basic-question-photos" class="photo-options" hidden></div>
+            <div id="basic-question-options" class="option-list" role="group" aria-label="Варианты ответа"></div>
+            <div class="question-actions"><span id="basic-answer-status" class="muted" role="status">Выберите ответ.</span><button id="basic-submit-answer" class="button button--primary" type="button" disabled>Подтвердить ответ</button></div>
+          </div>
+          <aside class="card quiz-aside"><span class="section-label">Срок попытки</span><h3>Таймер работает на сервере</h3><p>Возврат в кабинет и закрытие страницы не останавливают время. После обновления страницы нажмите «Продолжить тест».</p><button class="text-button" type="button" id="basic-back-dashboard">Вернуться в кабинет</button></aside>
+        </div>
+      </section>
+
+      <section class="screen" id="screen-basic-result" aria-labelledby="basic-result-title" hidden>
+        <div class="page-heading"><div><span class="section-label">Результат</span><h1 id="basic-result-title">Результат теста</h1><p id="result-intro">Разбор доступен только после завершения вашей попытки.</p></div></div>
+        <div class="card basic-result-summary">
+          <span id="basic-result-status" class="chip chip--muted">Загружаем</span>
+          <strong id="basic-result-score" class="result-score"></strong>
+          <p id="basic-result-message" role="status">Загружаем результат с сервера…</p>
+          <button class="button button--ghost" type="button" id="basic-result-retry" hidden>Повторить загрузку результата</button>
+        </div>
+        <div id="basic-result-review" class="basic-review" aria-label="Разбор вопросов"></div>
+        <button class="text-button" type="button" id="basic-result-back">Вернуться в кабинет</button>
+      </section>
+
+      <section class="screen" id="screen-quiz" aria-labelledby="quiz-title" hidden>
+        <div class="page-heading"><div><span class="section-label">Демонстрация прохождения</span><h1 id="quiz-title">Полная аттестация</h1><p>В демоверсии показаны два примера вместо 50 вопросов.</p></div><span class="chip chip--warning">Без оценки ответов</span></div>
+        <div class="quiz-layout">
+          <div class="card question-card">
+            <div class="question-top"><span id="question-number">Вопрос 1 из 2</span><span id="question-timer" class="timer" aria-live="off">75:00</span></div>
+            <div class="progress" aria-hidden="true"><span id="question-progress"></span></div>
+            <span id="question-type" class="section-label">Текстовый вопрос</span>
+            <h2 id="question-title"></h2>
+            <p id="question-hint" class="muted"></p>
+            <div id="question-photos" class="photo-options" hidden></div>
+            <div id="question-options" class="option-list" role="group" aria-label="Варианты ответа"></div>
+            <div class="question-actions"><span id="question-status" class="muted" role="status">Выберите вариант ответа.</span><button id="next-question" class="button button--primary" type="button" disabled>Продолжить →</button></div>
+          </div>
+          <aside class="card quiz-aside"><span class="section-label">Как устроен тест</span><h3>Один вопрос за раз</h3><p>В настоящей системе после подтверждения ответа вернуться к вопросу нельзя.</p><p>Здесь таймер и сохранение ответа показывают только внешний вид. Серверная проверка появится на следующем этапе.</p><button class="text-button" type="button" data-go="dashboard">Вернуться в кабинет</button></aside>
+        </div>
+      </section>
+
+      <section class="screen" id="screen-admin" aria-labelledby="admin-title" hidden>
+        <div class="page-heading"><div><span class="section-label">Кабинет администратора</span><h1 id="admin-title">Сотрудники и результаты</h1><p>Данные загружаются через защищённый серверный API.</p></div><button class="button button--ghost" type="button" id="admin-refresh">Обновить</button></div>
+        <p id="admin-status" class="muted" role="status" aria-live="polite">Проверяем права администратора…</p>
+        <form class="card invite-form" id="admin-invite-form" hidden>
+          <div><h2>Добавить сотрудника</h2><p class="muted">Приглашение придёт по email. Сотрудник появится в списке после подтверждения адреса.</p></div>
+          <div class="form-grid"><label>Имя<input name="firstName" type="text" maxlength="100" autocomplete="given-name" required></label><label>Фамилия<input name="lastName" type="text" maxlength="100" autocomplete="family-name" required></label><label>Email<input name="email" type="email" autocomplete="email" required></label></div>
+          <div class="form-actions"><button class="button button--primary" type="submit">Отправить приглашение</button></div>
+          <p id="admin-invite-status" class="muted" role="status" aria-live="polite"></p>
+        </form>
+        <div class="section-heading"><div><span class="section-label">Команда</span><h2>Список сотрудников</h2></div></div>
+        <div class="card table-card">
+          <div class="table-scroll"><table><thead><tr><th>Сотрудник</th><th>Email</th><th>Базовый тест</th><th>Итоговая аттестация</th><th>Действует до</th></tr></thead><tbody id="employees-body"></tbody></table></div>
+        </div>
+        <div class="card employee-detail" id="employee-detail" tabindex="-1" hidden>
+          <div class="detail-heading"><div><span class="section-label">Карточка сотрудника</span><h2 id="detail-name"></h2><p id="detail-email" class="muted"></p></div><button class="button button--ghost" id="detail-close" type="button">К списку сотрудников</button></div>
+          <div id="detail-results"></div>
+          <form id="admin-name-form" class="invite-form">
+            <h3>Имя и фамилия</h3>
+            <div class="form-grid"><label>Имя<input name="firstName" type="text" maxlength="100" autocomplete="given-name" required></label><label>Фамилия<input name="lastName" type="text" maxlength="100" autocomplete="family-name" required></label></div>
+            <div class="form-actions"><button class="button button--ghost" type="submit">Сохранить ФИО</button></div>
+            <p id="admin-name-status" class="muted" role="status" aria-live="polite"></p>
+          </form>
+          <h3 id="detail-history-title">История попыток</h3><p id="detail-history-status" class="muted" role="status"></p>
+          <div class="admin-history-heading" id="detail-history-heading" aria-hidden="true" hidden><span>Дата</span><span>Тест</span><span>Результат</span><span>Статус</span></div>
+          <div id="detail-history" class="detail-history"></div>
+          <button id="detail-history-retry" class="button button--ghost" type="button" hidden>Повторить загрузку истории</button>
+          <button id="detail-history-more" class="button button--ghost" type="button" hidden>Показать ещё</button>
+          <form id="admin-retake-form" class="invite-form">
+            <h3>Досрочная пересдача</h3>
+            <p class="muted">Вы оцениваете уважительность причины. Сервер разрешит одну дополнительную попытку только при действующей паузе пересдачи или до окончания срока аттестации.</p>
+            <div class="form-grid"><label>Вид теста<select name="kind"><option value="basic">Базовый тест</option><option value="full">Итоговая аттестация</option></select></label><label>Причина<textarea name="note" maxlength="500" required></textarea></label></div>
+            <div class="form-actions"><button class="button button--ghost" type="submit">Разрешить досрочную пересдачу</button></div>
+            <p id="admin-retake-status" class="muted" role="status" aria-live="polite"></p>
+          </form>
+        </div>
+      </section>
+      <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+    </main>
+  </div>
+</body>
+</html>
