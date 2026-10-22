@@ -302,8 +302,8 @@ function renderBasicResult(payload, attemptId) {
 function renderFullResult(payload, attemptId) {
   if (payload.attempt_id !== attemptId || payload.kind !== "full" ||
       !["completed", "timed_out"].includes(payload.state) ||
-      !Number.isInteger(payload.correct_count) || payload.question_count !== 50 ||
-      payload.correct_count < 0 || payload.correct_count > 50 ||
+      !Number.isInteger(payload.correct_count) || ![30, 50].includes(payload.question_count) ||
+      payload.correct_count < 0 || payload.correct_count > payload.question_count ||
       typeof payload.percentage !== "number" || typeof payload.passed !== "boolean" ||
       !Array.isArray(payload.topics) || !Array.isArray(payload.recommendations)) {
     throw new Error("Сервер вернул неполный результат. Повторите загрузку позже.");
@@ -351,10 +351,10 @@ function renderFullResult(payload, attemptId) {
   chip.className = `chip chip--${payload.passed ? "success" : "warning"}`;
   chip.textContent = payload.passed ? "Сдана" : "Не сдана";
   document.getElementById("basic-result-score").textContent =
-    `${payload.correct_count} из 50 · ${payload.percentage}%`;
+    `${payload.correct_count} из ${payload.question_count} · ${payload.percentage}%`;
   const term = payload.passed ? payload.valid_until_moscow : payload.retry_available_moscow;
   document.getElementById("basic-result-message").textContent =
-    `${payload.state === "timed_out" ? "Время истекло. " : ""}${payload.passed ? "Аттестация пройдена." : "Аттестация не сдана."}${term ? ` ${payload.passed ? "Действует до" : "Пересдача с"} ${term}.` : ""}`;
+    `${payload.state === "timed_out" ? "Время истекло. " : ""}${payload.passed ? "Аттестация пройдена." : "Аттестация не пройдена."}${term ? ` ${payload.passed ? "Действует до" : "Пересдача с"} ${term}.` : ""}`;
 }
 
 async function loadBasicResult(attemptId, kind = activeTestKind) {
@@ -551,7 +551,7 @@ function renderBasicQuestion(payload) {
   if (pending && single && pending.selected_option_ids.length !== 1) {
     throw new Error("Сохранённый запрос ответа повреждён. Обратитесь к администратору.");
   }
-  if (payload.question_count !== (activeTestKind === "full" ? 50 : 20)) {
+  if ((activeTestKind === "full" ? ![30, 50].includes(payload.question_count) : payload.question_count !== 20)) {
     throw new Error("Сервер вернул неверное число вопросов.");
   }
   basicQuestion = { attemptId: payload.attempt_id, id: question.attempt_question_id,
@@ -568,7 +568,9 @@ function renderBasicQuestion(payload) {
   const photos = document.getElementById("basic-question-photos");
   photos.replaceChildren();
   const imageItems = Array.isArray(question.photos) ? question.photos : [];
-  photos.hidden = imageItems.length === 0;
+  const directPhotoChoice = activeTestKind === "full" && question.type === "photo_single" &&
+    question.options.length === 2 && question.options.every(option => typeof option.photo_url === "string");
+  photos.hidden = directPhotoChoice || imageItems.length === 0;
   imageItems.forEach(photo => {
     if (typeof photo?.url !== "string") return;
     const figure = document.createElement("figure");
@@ -585,10 +587,11 @@ function renderBasicQuestion(payload) {
   });
   const options = document.getElementById("basic-question-options");
   options.replaceChildren();
+  options.classList.toggle("photo-choice-grid", directPhotoChoice);
   question.options.forEach((option, index) => {
     const item = document.createElement("button");
     item.type = "button";
-    item.className = "option";
+    item.className = directPhotoChoice ? "photo-choice-button" : "option";
     item.setAttribute("aria-pressed", String(basicSelectedOptions.has(option.id)));
     item.classList.toggle("is-selected", basicSelectedOptions.has(option.id));
     item.disabled = Boolean(basicPendingAnswer);
@@ -598,7 +601,13 @@ function renderBasicQuestion(payload) {
     mark.textContent = String.fromCharCode(1040 + index);
     const label = document.createElement("span");
     label.textContent = option.label;
-    item.append(mark, label);
+    if (directPhotoChoice) {
+      const image = document.createElement("img");
+      image.src = option.photo_url;
+      image.alt = `Фотография ${index + 1}`;
+      item.setAttribute("aria-label", `Фотография ${index + 1}`);
+      item.append(image);
+    } else item.append(mark, label);
     item.addEventListener("click", () => {
       if (basicAnswerInFlight || basicPendingAnswer) return;
       if (!multi) basicSelectedOptions.clear();
@@ -616,7 +625,8 @@ function renderBasicQuestion(payload) {
   document.getElementById("basic-answer-status").textContent = pending
     ? "Подтверждение не получено. Повторите тот же ответ. Выбор изменить нельзя."
     : multi ? "Выберите один или несколько вариантов. После подтверждения ответ изменить нельзя."
-      : "Выберите один вариант. После подтверждения ответ изменить нельзя.";
+      : directPhotoChoice ? "Нажмите на фотографию, затем подтвердите ответ."
+        : "Выберите один вариант. После подтверждения ответ изменить нельзя.";
   updateBasicAnswerButton();
   startBasicCountdown(payload);
 }
@@ -740,7 +750,7 @@ async function handleBasicAction(kind = "basic") {
   const canResume = test?.state === "in_progress" && basicAttemptIdPattern.test(test.active_attempt_id);
   if (!canStart && !canResume) return;
   if (canStart && !window.confirm(kind === "full"
-    ? "Начать итоговую аттестацию? 50 вопросов, 75 минут. Таймер начнётся сразу после подтверждения и не остановится при закрытии страницы.\n\nПодтверждённый ответ нельзя изменить. При неудаче пересдача обычно доступна через 7 дней."
+    ? "Начать итоговую аттестацию? 30 вопросов, 20 минут. Допускается не более 2 ошибок; для успешного прохождения необходимо минимум 28 правильных ответов."
     : "Начать базовый тест? 20 вопросов, 25 минут. Таймер запустится сразу и не остановится при закрытии страницы.\n\nПодтверждённый ответ нельзя изменить. Неудачная попытка может потребовать ожидания 24 часа перед пересдачей.")) return;
 
   activeTestKind = kind;
@@ -1026,7 +1036,7 @@ function startQuiz() {
   if (currentRole === "employee") return;
   questionIndex = 0;
   selectedOption = -1;
-  demoDeadline = Date.now() + 75 * 60 * 1000;
+  demoDeadline = Date.now() + 20 * 60 * 1000;
   showScreen("quiz");
   renderQuestion();
   updateTimer();

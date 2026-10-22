@@ -25,7 +25,7 @@
         <button type="button" class="nav-button" data-go="admin" hidden>Администратор</button>
         <button type="button" class="nav-button" id="logout-button" hidden>Выйти</button>
       </nav>
-      <div class="sidebar-note">
+      <div class="sidebar-note" data-demo-only hidden>
         <span class="status-dot"></span>
         Вход через Supabase Auth<br>Базовый тест подключён
       </div>
@@ -37,7 +37,7 @@
         <span class="eyebrow">Система тестирования</span>
         <span class="topbar-pill" id="data-status-label">Проверяем доступ</span>
       </div>
-      <div class="demo-banner" role="note">
+      <div class="demo-banner" role="note" data-demo-only hidden>
         <strong>Данные тестирования.</strong> Доступные сведения и действия загружаются через сервер с проверкой прав.
       </div>
 
@@ -94,9 +94,9 @@
           <article class="card test-card test-card--featured">
             <span class="chip chip--muted" id="full-availability-chip">Проверяем</span>
             <h3>Полная аттестация</h3>
-            <p>50 вопросов · 75 минут · порог 45 из 50</p>
+            <p>30 вопросов · 20 минут · допускается не более 2 ошибок · для успешного прохождения необходимо минимум 28 правильных ответов</p>
             <div class="test-card__footer"><span id="full-availability-message" role="status" aria-live="polite">Проверяем доступность аттестации…</span><button class="button button--primary" id="full-availability-action" type="button" disabled hidden>Начать аттестацию</button></div>
-            <p class="muted" id="full-launch-note" hidden>Таймер не останавливается при закрытии страницы. Подтверждённый ответ изменить нельзя.</p>
+            <p class="muted" id="full-launch-note" hidden></p>
           </article>
         </div>
         <section class="card basic-history" id="basic-history-panel" data-employee-only hidden aria-labelledby="basic-history-title">
@@ -115,7 +115,7 @@
           <article class="card test-card test-card--featured">
             <span class="chip chip--warning">Пересдача ожидается</span>
             <h3>Полная аттестация</h3>
-            <p>50 вопросов · 75 минут · порог 90%</p>
+            <p>30 вопросов · 20 минут · допускается не более 2 ошибок · минимум 28 правильных ответов</p>
             <div class="test-card__footer"><span>Доступна с 19 октября 2026</span><button class="button button--primary" type="button" data-start="full">Посмотреть демотест</button></div>
           </article>
         </div>
@@ -164,10 +164,10 @@
       </section>
 
       <section class="screen" id="screen-quiz" aria-labelledby="quiz-title" hidden>
-        <div class="page-heading"><div><span class="section-label">Демонстрация прохождения</span><h1 id="quiz-title">Полная аттестация</h1><p>В демоверсии показаны два примера вместо 50 вопросов.</p></div><span class="chip chip--warning">Без оценки ответов</span></div>
+        <div class="page-heading"><div><span class="section-label">Демонстрация прохождения</span><h1 id="quiz-title">Полная аттестация</h1><p>В демоверсии показаны два примера.</p></div><span class="chip chip--warning">Без оценки ответов</span></div>
         <div class="quiz-layout">
           <div class="card question-card">
-            <div class="question-top"><span id="question-number">Вопрос 1 из 2</span><span id="question-timer" class="timer" aria-live="off">75:00</span></div>
+            <div class="question-top"><span id="question-number">Вопрос 1 из 2</span><span id="question-timer" class="timer" aria-live="off">20:00</span></div>
             <div class="progress" aria-hidden="true"><span id="question-progress"></span></div>
             <span id="question-type" class="section-label">Текстовый вопрос</span>
             <h2 id="question-title"></h2>
